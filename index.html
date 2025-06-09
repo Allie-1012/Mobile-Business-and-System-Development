@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>foodpanda訂餐</title>
+  <style>
+    /* Reset & 基本 */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: "微軟正黑體", Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header, footer {
+      background: #FF6F61;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    main {
+      flex: 1;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    h2 {
+      color: #FF6F61;
+      border-bottom: 2px solid #FF6F61;
+      padding-bottom: 0.3rem;
+      margin-bottom: 1rem;
+    }
+
+    /* 菜單列表 */
+    .menu-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+    }
+    .menu-item {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 1rem;
+      width: 45%;
+      background: white;
+      box-shadow: 0 2px 5px rgb(0 0 0 / 0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .menu-item h3 {
+      margin-top: 0;
+    }
+    .menu-item p {
+      margin: 0.5rem 0 1rem 0;
+    }
+    .menu-item button {
+      background: #FF6F61;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      padding: 0.5rem 0;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .menu-item button:hover {
+      background: #e65a4f;
+    }
+
+    /* 訂單列表 */
+    .order-list {
+      margin-top: 2rem;
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 2px 5px rgb(0 0 0 / 0.1);
+    }
+    .order-list ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1rem 0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .order-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.3rem 0;
+      border-bottom: 1px solid #eee;
+    }
+    .order-list li:last-child {
+      border-bottom: none;
+    }
+    .order-list button.remove-btn {
+      background: #bbb;
+      border: none;
+      border-radius: 3px;
+      color: white;
+      cursor: pointer;
+      padding: 0 0.5rem;
+      font-weight: bold;
+    }
+    .order-list button.remove-btn:hover {
+      background: #999;
+    }
+    .order-list .total {
+      text-align: right;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+    .order-list label {
+      font-weight: bold;
+    }
+    .order-list select {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+    .order-list button#payBtn {
+      width: 100%;
+      background: #FF6F61;
+      border: none;
+      color: white;
+      font-weight: bold;
+      padding: 0.8rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .order-list button#payBtn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    /* 訂單狀態流程 */
+    .status-chart-section {
+      margin-top: 2rem;
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgb(0 0 0 / 0.1);
+    }
+
+    /* 完成訂單頁面 */
+    #finishPage {
+      display: none;
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgb(0 0 0 / 0.1);
+      text-align: center;
+      margin-top: 2rem;
+    }
+    #finishPage h2 {
+      color: #FF6F61;
+      margin-bottom: 1rem;
+    }
+    #finishPage p {
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+    }
+    #finishPage button {
+      background: #FF6F61;
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    /* 響應式 */
+    @media (max-width: 480px) {
+      .menu-item {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>foodpanda訂餐</header>
+
+<main>
+  <section id="orderSection">
+    <section>
+      <h2>菜單</h2>
+      <div class="menu-list" id="menuList"></div>
+    </section>
+
+    <section class="order-list">
+      <h2>訂單明細</h2>
+      <ul id="orderItems"></ul>
+      <div class="total" id="orderTotal">總計：$0</div>
+
+      <label for="paymentMethod">付款方式：</label>
+      <select id="paymentMethod" aria-label="付款方式選擇">
+        <option value="" selected disabled>請選擇付款方式</option>
+        <option value="信用卡">信用卡</option>
+        <option value="現金">現金</option>
+        <option value="Line Pay">Line Pay</option>
+      </select>
+
+      <button id="payBtn" disabled>付款</button>
+    </section>
+
+    <section class="status-chart-section">
+      <h2>訂單狀態流程</h2>
+      <canvas id="orderStatusChart" width="300" height="200"></canvas>
+    </section>
+  </section>
+
+  <section id="finishPage">
+    <h2>訂單完成！感謝您的訂購</h2>
+    <p id="finishSummary"></p>
+    <button id="backBtn">返回首頁繼續點餐</button>
+  </section>
+</main>
+
+<footer>© 2025 行動商務專題</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
